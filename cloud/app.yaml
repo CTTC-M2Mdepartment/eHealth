@@ -4,13 +4,17 @@ threadsafe: yes
 
 handlers:
 - url: /
-  script: previous.app
+  script: web.app
 - url: /register
-  script: previous.app
+  script: web.app
 - url: /login
-  script: previous.app
+  script: web.app
 - url: /previous
-  script: previous.app
+  script: web.app
+- url: /current
+  script: web.app
+- url: /update
+  script: web.app
 
 libraries:
 - name: MySQLdb
