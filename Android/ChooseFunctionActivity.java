@@ -7,6 +7,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+/**
+ * @author Zexuan Yu
+ */
+
 public class ChooseFunctionActivity extends AppCompatActivity {
 
     @Override
