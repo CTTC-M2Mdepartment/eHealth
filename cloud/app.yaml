@@ -11,10 +11,17 @@ handlers:
   script: web.app
 - url: /previous
   script: web.app
+- url: /gateway
+  script: web.app
 - url: /current
   script: web.app
 - url: /update
   script: web.app
+- url: /changeSetting
+  script: web.app
+- url: /warn
+  script: web.app
+
 
 libraries:
 - name: MySQLdb
