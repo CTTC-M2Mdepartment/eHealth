@@ -86,7 +86,7 @@ public class LoginActivity extends AppCompatActivity {
      */
     private class Login extends AsyncTask<String, Integer, String> {
         String resultstring = "";
-        public static final String url = "http://m2m-ehealth.appspot.com/login";
+        static final String url = "http://m2m-ehealth.appspot.com/login";
 
         /**
          *

@@ -10,7 +10,10 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -45,6 +48,7 @@ public class RegisterActivity extends AppCompatActivity {
         String strpsw = password.getText().toString();
         String stragain = againpsw.getText().toString();
         String struser = user.getText().toString();
+        String response = "";
         if(strpsw.equals(stragain)==false||struser.equals("")){
             Toast.makeText(this, "no mach,try again"+strpsw+"**"+stragain, Toast.LENGTH_SHORT).show();
         }
@@ -57,10 +61,21 @@ public class RegisterActivity extends AppCompatActivity {
                 Log.d("Json constructor","Error");
                 e.printStackTrace();
             }
-            new Register().execute(registerData.toString());
-            Intent intent = new Intent(RegisterActivity.this,MainActivity.class);
-            startActivity(intent);
-            //TODO:check whether if the username is used already
+            try{
+                response = new Register().execute(registerData.toString()).get();
+                if(response.equals("used")){
+                    Toast.makeText(this, "the name is already used", Toast.LENGTH_SHORT).show();
+                }
+                if(response.equals("success")){
+                    Intent intent = new Intent(RegisterActivity.this,SettingActivity.class);
+                    startActivity(intent);
+                }
+                //Toast.makeText(this, response, Toast.LENGTH_SHORT).show();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+
         }
     }
 
@@ -86,13 +101,19 @@ public class RegisterActivity extends AppCompatActivity {
                 httpURLConnection.setRequestProperty("Content-Length", String.valueOf(data.length));
                 OutputStream outputStream = httpURLConnection.getOutputStream();
                 outputStream.write(data);
-                int response = httpURLConnection.getResponseCode();
-                if(response == HttpURLConnection.HTTP_OK) {
-                    resultstring = "1";
+                InputStream is = httpURLConnection.getInputStream();
+                String line = "";
+                StringBuilder total = new StringBuilder();
+                //get the return from the cloud
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                try {
+                    while ((line = rd.readLine()) != null) {
+                        total.append(line);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-                else{
-                    resultstring ="0";
-                }
+                resultstring = total.toString();
 
             } catch (IOException e) {
                 e.printStackTrace();

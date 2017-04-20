@@ -36,4 +36,8 @@ public class ChooseFunctionActivity extends AppCompatActivity {
         Intent intent = new Intent(ChooseFunctionActivity.this,RunningActivity.class);
         startActivity(intent);
     }
+    public void onClickSetting(View v){
+        Intent intent = new Intent(ChooseFunctionActivity.this,SettingActivity.class);
+        startActivity(intent);
+    }
 }

@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -82,6 +83,7 @@ public class RunningActivity extends AppCompatActivity {
         String userlogin = mSharedPreferences.getString("username", "default");
         SimpleDateFormat sDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String date = sDateFormat.format(new java.util.Date());
+        //String date = "2017-04-10";
         JSONObject registerData = new JSONObject();
         try{
             registerData.put("userlogin",userlogin);
@@ -111,8 +113,12 @@ public class RunningActivity extends AppCompatActivity {
     private class Current extends AsyncTask<String, String, String> {
         String resultstring = "";
         String value = "empty";
-        public static final String updateurl = "http://m2m-ehealth.appspot.com/update";
-        public static final String currenturl = "http://m2m-ehealth.appspot.com/current";
+        int minPulse;
+        int maxPulse;
+        int normal = 0;
+        static final String updateurl = "http://m2m-ehealth.appspot.com/update";
+        static final String currenturl = "http://m2m-ehealth.appspot.com/current";
+        static final String informationurl = "http://m2m-ehealth.appspot.com/warn";
         JSONObject raceid = new JSONObject();
         @Override
         protected String doInBackground(String... params){
@@ -148,8 +154,45 @@ public class RunningActivity extends AppCompatActivity {
                     Log.d("Json constructor","Error");
                     e.printStackTrace();
                 }
-                data = raceid.toString().getBytes();
+                //get the threshold
+                SharedPreferences sharedPreferences = getSharedPreferences("userLogin", 0);
+                String user = sharedPreferences.getString("username", "default");
+                JSONObject userinformation = new JSONObject();
+                try{
+                    userinformation.put("username",user);
+                }catch (JSONException e){
+                    Log.d("Json constructor","Error");
+                    e.printStackTrace();
+                }
+                data = userinformation.toString().getBytes();
+                HttpURLConnection threshold = (HttpURLConnection)new URL(informationurl).openConnection();
+                threshold.setConnectTimeout(3000);
+                threshold.setDoInput(true);
+                threshold.setDoOutput(true);
+                threshold.setRequestMethod("POST");
+                threshold.setUseCaches(false);
+                threshold.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+                threshold.setRequestProperty("Content-Length", String.valueOf(data.length));
+                outputStream = threshold.getOutputStream();
+                outputStream.write(data);
+                InputStream read = threshold.getInputStream();
+                StringBuilder maxmin = new StringBuilder();
+                BufferedReader br = new BufferedReader(new InputStreamReader(read));
+                try {
+                    while ((line = br.readLine()) != null) {
+                            maxmin.append(line);
+                    }
+                } catch (IOException e) {
+                        e.printStackTrace();
+                }
+                value = maxmin.toString();
+                String handle = value.replace("[","");
+                handle = handle.replace("]","");
+                String[] warning = handle.split(",");
+                minPulse = Integer.parseInt(warning[0].trim());
+                maxPulse = Integer.parseInt(warning[1].trim());
                 //update the diagram every 5 seconds
+                data = raceid.toString().getBytes();
                 while(update){
                     HttpURLConnection httpURLConnection = (HttpURLConnection)new URL(updateurl).openConnection();
                     httpURLConnection.setConnectTimeout(3000);
@@ -174,9 +217,6 @@ public class RunningActivity extends AppCompatActivity {
                         }
                         value = total.toString();
                         publishProgress(value);
-                        //TODO:warning logic
-                        Vibrator vib = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
-                        vib.vibrate(1000);
                         Thread.sleep(5000);
                     }catch (InterruptedException e){
                         e.printStackTrace();
@@ -204,6 +244,17 @@ public class RunningActivity extends AppCompatActivity {
                     int display[] = new int[data.length];
                     for(int i = 0; i < data.length; i++){
                         display[i] = Integer.parseInt(data[(data.length-1)-i].trim(),10);
+                    }
+                    //check user's condition
+                    normal = 0;
+                    for(int i = 0; i < data.length; i++){
+                        if(display[i]<minPulse||display[i]>maxPulse){
+                            normal++;
+                        }
+                    }
+                    if(normal >= 5){
+                        Vibrator vib = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
+                        vib.vibrate(1000);
                     }
                     lineChart = (LineChartView)findViewById(R.id.line_chart);
                     for (int i = 0; i < data.length; i++) {
@@ -245,9 +296,13 @@ public class RunningActivity extends AppCompatActivity {
                     lineChart.setContainerScrollEnabled(true, ContainerScrollType.HORIZONTAL);
                     lineChart.setLineChartData(draw);
                     lineChart.setVisibility(View.VISIBLE);
+
                 }
             }
+           // TextView statusTextView = (TextView) findViewById(R.id.test);
+            //statusTextView.setText(in);
         }
+
 
     }
 }
