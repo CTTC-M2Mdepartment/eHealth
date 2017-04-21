@@ -53,8 +53,8 @@ class Gateway(webapp2.RequestHandler):
         runnumber = unpack['runnumber']
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
-        cursor.execute('insert into senddata(username,typeofsensor,sdata,raceid) values (%s,%s,%s,%s)',(username,typeofsensor,data,runnumber))
+        cursor.execute('USE ehealth')
+        cursor.execute('insert into sensordata(username,typeofsensor,sdata,raceid) values (%s,%s,%s,%s)',(username,typeofsensor,data,runnumber))
         db.commit()
         db.close()
 
@@ -73,7 +73,7 @@ class Register(webapp2.RequestHandler):
         password = unpack['password']
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
+        cursor.execute('USE ehealth')
         cursor.execute('select username from usertable where username=%s',(username,))
         check = cursor.fetchall()
         response = len(check)
@@ -82,6 +82,8 @@ class Register(webapp2.RequestHandler):
             response = "success"
         else:
             response = "used"
+        if (cmp(response,"success")==0):
+            cursor.execute('UPDATE usertable SET gender="Male",birthday="1970-01-01",rate=60 where username=%s',(username,))
         db.commit()
         db.close()
         self.response.write(response)
@@ -103,7 +105,7 @@ class Login(webapp2.RequestHandler):
         get_password = unpack['password']
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
+        cursor.execute('USE ehealth')
         cursor.execute("SELECT upassword FROM usertable WHERE username = %s",(username,))
         read_password = cursor.fetchall()
         if(len(read_password)==0):
@@ -133,20 +135,28 @@ class Previous(webapp2.RequestHandler):
         username = unpack['userlogin']
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
-        cursor.execute("SELECT DISTINCT runnumber FROM sensordata WHERE username = %s",(username,))
+        cursor.execute('USE ehealth')
+        cursor.execute("SELECT DISTINCT raceid FROM sensordata WHERE username = %s",(username,))
         runnumbers = cursor.fetchall()
         for runnumber in runnumbers:
             s = runnumber[0]
-            cursor.execute("SELECT max(sdata) as max_value,min(sdata) as min_value,avg(sdata) as avg_value FROM sensordata WHERE username = %s AND runnumber = %s",(username,s))
+            cursor.execute("SELECT max(sdata) as max_value,min(sdata) as min_value,avg(sdata) as avg_value FROM sensordata WHERE username = %s AND raceid = %s AND typeofsensor = %s",(username,s,"pulse"))
             data = cursor.fetchall()
-            max_value = str(data[0][0])
-            min_value = str(data[0][1])
-            avg_value = str(data[0][2])
+            max_value_pulse = str(data[0][0])
+            min_value_pulse = str(data[0][1])
+            avg_value_pulse = str(int(data[0][2]))
             datalist.append(s)
-            datalist.append(max_value)
-            datalist.append(min_value)
-            datalist.append(avg_value)
+            datalist.append(max_value_pulse)
+            datalist.append(min_value_pulse)
+            datalist.append(avg_value_pulse)
+            cursor.execute("SELECT max(sdata) as max_value,min(sdata) as min_value,avg(sdata) as avg_value FROM sensordata WHERE username = %s AND raceid = %s AND typeofsensor = %s",(username,s,"oxygen"))
+            data = cursor.fetchall()
+            max_value_oxygen = str(data[0][0])
+            min_value_oxygen = str(data[0][1])
+            avg_value_oxygen = str(int(data[0][2]))
+            datalist.append(max_value_oxygen)
+            datalist.append(min_value_oxygen)
+            datalist.append(avg_value_oxygen)
         db.commit()
         db.close()
         jsondata = json.dumps(datalist)
@@ -160,7 +170,7 @@ class MainPage(webapp2.RequestHandler):
         self.response.headers['Content-Type'] = 'text/plain'
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
+        cursor.execute('USE ehealth')
         cursor.execute('SELECT * FROM usertable')
         for r in cursor.fetchall():
             self.response.write('{}\n'.format(r))
@@ -178,8 +188,8 @@ class Current(webapp2.RequestHandler):
         format_date = '%'+date+'%'
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
-        cursor.execute('select distinct raceid from senddata where username=%s and ts like %s order by ts desc limit 0,1',(username,format_date))
+        cursor.execute('USE ehealth')
+        cursor.execute('select distinct raceid from sensordata where username=%s and ts like %s order by ts desc limit 0,1',(username,format_date))
         query = cursor.fetchall()
         for q in query:
             runnumber = str(q[0])
@@ -200,8 +210,13 @@ class Update(webapp2.RequestHandler):
         raceid = change.strip('"]')
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
-        cursor.execute('select sdata from senddata where raceid=%s and typeofsensor like %s order by ts desc limit 0,10',(raceid,'pulse'))
+        cursor.execute('USE ehealth')
+        cursor.execute('select sdata from sensordata where raceid=%s and typeofsensor like %s order by ts desc limit 0,10',(raceid,'pulse'))
+        query = cursor.fetchall()
+        for q in query:
+            data = str(q[0])
+            datalist.append(data)
+        cursor.execute('select sdata from sensordata where raceid=%s and typeofsensor like %s order by ts desc limit 0,10',(raceid,'oxygen'))
         query = cursor.fetchall()
         for q in query:
             data = str(q[0])
@@ -223,9 +238,9 @@ class Change(webapp2.RequestHandler):
         rate = int(unpack["rate"])
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
-        cursor.execute('update userinformation set gender=%s,birthday=%s,restRate=%s where username=%s',(gender,birthday,rate,username))
-        cursor.execute('select gender,birthday,restRate from userinformation where username=%s',(username,))
+        cursor.execute('USE ehealth')
+        cursor.execute('update usertable set gender=%s,birthday=%s,rate=%s where username=%s',(gender,birthday,rate,username))
+        cursor.execute('select gender,birthday,rate from usertable where username=%s',(username,))
         query = cursor.fetchall()
         change_gender = ''.join(query[0][0])
         change_birthday = ''.join(query[0][1])
@@ -249,8 +264,8 @@ class Warn(webapp2.RequestHandler):
         username = unpack["username"]
         db = connect_to_cloudsql()
         cursor = db.cursor()
-        cursor.execute('USE testing')
-        cursor.execute('select gender,birthday,restRate from userinformation where username=%s',(username,))
+        cursor.execute('USE ehealth')
+        cursor.execute('select gender,birthday,rate from usertable where username=%s',(username,))
         query = cursor.fetchall()
         gender = str(query[0][0])
         birthday = str(query[0][1])
