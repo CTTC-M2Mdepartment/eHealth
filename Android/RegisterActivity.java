@@ -67,7 +67,7 @@ public class RegisterActivity extends AppCompatActivity {
                     Toast.makeText(this, "the name is already used", Toast.LENGTH_SHORT).show();
                 }
                 if(response.equals("success")){
-                    Intent intent = new Intent(RegisterActivity.this,SettingActivity.class);
+                    Intent intent = new Intent(RegisterActivity.this,MainActivity.class);
                     startActivity(intent);
                 }
                 //Toast.makeText(this, response, Toast.LENGTH_SHORT).show();
