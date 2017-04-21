@@ -71,18 +71,27 @@ public class PreviousDataActivity extends AppCompatActivity {
                     tv1.setText("Race");
                     tableHead.addView(tv1);
                     TextView tv2 = new TextView(this);
-                    tv2.setText("Max");
+                    tv2.setText("MaxPulse");
                     tableHead.addView(tv2);
                     TextView tv3 = new TextView(this);
-                    tv3.setText("Min");
+                    tv3.setText("MinPulse");
                     tableHead.addView(tv3);
                     TextView tv4 = new TextView(this);
-                    tv4.setText("Average");
+                    tv4.setText("AveragePulse");
                     tableHead.addView(tv4);
+                    TextView tv5 = new TextView(this);
+                    tv5.setText("MaxSO2");
+                    tableHead.addView(tv5);
+                    TextView tv6 = new TextView(this);
+                    tv6.setText("MinSO2");
+                    tableHead.addView(tv6);
+                    TextView tv7 = new TextView(this);
+                    tv7.setText("AverageSO2");
+                    tableHead.addView(tv7);
                     tableLayout.addView(tableHead, new TableLayout.LayoutParams(MP, WC));
-                    for (int row = 0; row < (rarry.length/4); row++) {
+                    for (int row = 0; row < (rarry.length/7); row++) {
                         TableRow tableRow = new TableRow(this);
-                        for (int col = 0; col < 4; col++) {
+                        for (int col = 0; col < 7; col++) {
                             TextView tv = new TextView(this);
                             tv.setText(rarry[i].replace(" ",""));
                             tableRow.addView(tv);

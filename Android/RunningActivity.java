@@ -20,6 +20,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -45,7 +46,8 @@ public class RunningActivity extends AppCompatActivity {
     boolean update = false;
     private Current task = null;
     private LineChartView lineChart;
-    private List<PointValue> mPointValues = new ArrayList<PointValue>();
+    private List<PointValue> pulseValues = new ArrayList<PointValue>();
+    private List<PointValue> oxygenValues = new ArrayList<PointValue>();
     private List<AxisValue> mAxisValues = new ArrayList<AxisValue>();
     String [] point = {"1","2","3","4","5","6","7","8","9","10"};
 
@@ -62,6 +64,7 @@ public class RunningActivity extends AppCompatActivity {
     }
 
     public void onClickBackToChoose(View v){
+        stopTask();
         Intent intent = new Intent(RunningActivity.this,ChooseFunctionActivity.class);
         startActivity(intent);
     }
@@ -115,7 +118,8 @@ public class RunningActivity extends AppCompatActivity {
         String value = "empty";
         int minPulse;
         int maxPulse;
-        int normal = 0;
+        int normalPulse = 0;
+        int normalOxyegen = 0;
         static final String updateurl = "http://m2m-ehealth.appspot.com/update";
         static final String currenturl = "http://m2m-ehealth.appspot.com/current";
         static final String informationurl = "http://m2m-ehealth.appspot.com/warn";
@@ -246,28 +250,39 @@ public class RunningActivity extends AppCompatActivity {
                         display[i] = Integer.parseInt(data[(data.length-1)-i].trim(),10);
                     }
                     //check user's condition
-                    normal = 0;
-                    for(int i = 0; i < data.length; i++){
+                    normalPulse = 0;
+                    normalOxyegen = 0;
+                    for(int i = 0; i < data.length/2; i++){
                         if(display[i]<minPulse||display[i]>maxPulse){
-                            normal++;
+                            normalPulse++;
                         }
                     }
-                    if(normal >= 5){
+                    for(int i = data.length/2;i<data.length;i++){
+                        if(display[i]<94){
+                            normalOxyegen++;
+                        }
+                    }
+                    if(normalPulse >= 5|| normalOxyegen>=5){
                         Vibrator vib = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
                         vib.vibrate(1000);
                     }
                     lineChart = (LineChartView)findViewById(R.id.line_chart);
-                    for (int i = 0; i < data.length; i++) {
+                    for (int i = 0; i < data.length/2; i++) {
                         mAxisValues.add(new AxisValue(i).setLabel(point[i]));
                     }
                     //clean the previous data
-                    mPointValues.clear();
+                    pulseValues.clear();
+                    oxygenValues.clear();
                     //add new data
-                    for (int i = 0; i < data.length; i++) {
-                        mPointValues.add(new PointValue(i, display[i]));
+                    for (int i = 0; i < data.length/2; i++) {
+                        oxygenValues.add(new PointValue(i, display[i]));
+                    }
+                    for (int i = data.length/2; i < data.length; i++) {
+                        pulseValues.add(new PointValue((i-data.length/2),display[i]));
                     }
                     //draw line
-                    Line line = new Line(mPointValues).setColor(Color.BLACK).setCubic(false);
+                    Line line = new Line(pulseValues).setColor(Color.BLACK).setCubic(false);
+                    Line line2 =  new Line(oxygenValues).setColor(Color.BLUE).setCubic(false);
                     List<Line> lines = new ArrayList<Line>();
                     line.setShape(ValueShape.CIRCLE);
                     line.setCubic(false);
@@ -276,6 +291,13 @@ public class RunningActivity extends AppCompatActivity {
                     line.setHasLines(true);
                     line.setHasPoints(true);
                     lines.add(line);
+                    line2.setShape(ValueShape.CIRCLE);
+                    line2.setCubic(false);
+                    line2.setFilled(false);
+                    line2.setHasLabelsOnlyForSelected(true);
+                    line2.setHasLines(true);
+                    line2.setHasPoints(true);
+                    lines.add(line2);
                     LineChartData draw = new LineChartData();
                     draw.setLines(lines);
                     Axis axisX = new Axis();
