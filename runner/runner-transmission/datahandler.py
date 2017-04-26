@@ -1,6 +1,5 @@
 import serial
 import time
-import types
 port = "/dev/ttyACM0"
 TIMESLOT = 5
 USER = 'user1'
@@ -19,15 +18,14 @@ try:
             print data
             pulse = int(data[0])
             oxygen = int(data[1])
-            if(pulse >= 50):
-                print pulse
-                print oxygen
+            if(oxygen > 90):
+                if(pulse <= 50):
+                    pulse = 100 + pulse
                 data_list.append(pulse)
                 data_list.append(oxygen)
-            else:
-                print "wrong data"
+            #else:
+                #print "wrong data"
         i = i + 1
-        print(i)
         time.sleep(2)
 except:
     print("no such file")

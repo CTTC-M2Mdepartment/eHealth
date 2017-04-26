@@ -94,7 +94,7 @@ void setup()
   printf("Setting CRC ON: state %d\n", e);
 
   // Select output power (Max, High or Low)
-  e |= sx1272.setPower('L');
+  e |= sx1272.setPower('H');
   printf("Setting Power: state %d\n", e);
 
   // Set the node address
