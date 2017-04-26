@@ -168,14 +168,17 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private class ChangeSetting extends AsyncTask<String, Integer, String> {
-        String returnString = "";
+        String resultstring = "";
         static final String url = "http://m2m-ehealth.appspot.com/changeSetting";
 
         @Override
         protected String doInBackground(String... params){
-            try {
+           // try {
                 String input = params[0];
-                byte[]data = input.getBytes();
+                ConnectionToCloud send = new ConnectionToCloud(url,input);
+                resultstring = send.sendToCloud();
+                return resultstring;
+                /*byte[]data = input.getBytes();
                 //http request
                 HttpURLConnection httpURLConnection = (HttpURLConnection)new URL(url).openConnection();
                 httpURLConnection.setConnectTimeout(3000);
@@ -204,7 +207,7 @@ public class SettingActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return returnString ;
+            return returnString ;*/
         }
     }
 }

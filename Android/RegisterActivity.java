@@ -88,37 +88,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params){
-            try {
                 String input = params[0];
-                byte[]data = input.getBytes();
-                HttpURLConnection httpURLConnection = (HttpURLConnection)new URL(url).openConnection();
-                httpURLConnection.setConnectTimeout(3000);
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setUseCaches(false);
-                httpURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                httpURLConnection.setRequestProperty("Content-Length", String.valueOf(data.length));
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                outputStream.write(data);
-                InputStream is = httpURLConnection.getInputStream();
-                String line = "";
-                StringBuilder total = new StringBuilder();
-                //get the return from the cloud
-                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                try {
-                    while ((line = rd.readLine()) != null) {
-                        total.append(line);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                resultstring = total.toString();
+                ConnectionToCloud send = new ConnectionToCloud(url,input);
+                resultstring = send.sendToCloud();
+                return resultstring;
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return resultstring ;
         }
 
     }

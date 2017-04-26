@@ -126,32 +126,12 @@ public class RunningActivity extends AppCompatActivity {
         JSONObject raceid = new JSONObject();
         @Override
         protected String doInBackground(String... params){
-            try {
+
                 //get the current race id
                 String input = params[0];
                 String line = "";
-                byte[]data = input.getBytes();
-                HttpURLConnection currentRun= (HttpURLConnection)new URL(currenturl).openConnection();
-                currentRun.setConnectTimeout(3000);
-                currentRun.setDoInput(true);
-                currentRun.setDoOutput(true);
-                currentRun.setRequestMethod("POST");
-                currentRun.setUseCaches(false);
-                currentRun.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                currentRun.setRequestProperty("Content-Length", String.valueOf(data.length));
-                OutputStream outputStream = currentRun.getOutputStream();
-                outputStream.write(data);
-                InputStream runnumber = currentRun.getInputStream();
-                StringBuilder race  =new StringBuilder();
-                BufferedReader bf = new BufferedReader(new InputStreamReader(runnumber));
-                try {
-                    while ((line = bf.readLine()) != null) {
-                        race.append(line);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                value = race.toString();
+                ConnectionToCloud send = new ConnectionToCloud(currenturl,input);
+                value = send.sendToCloud();
                 try{
                     raceid.put("runnumber",value);
                 }catch (JSONException e){
@@ -168,68 +148,30 @@ public class RunningActivity extends AppCompatActivity {
                     Log.d("Json constructor","Error");
                     e.printStackTrace();
                 }
-                data = userinformation.toString().getBytes();
-                HttpURLConnection threshold = (HttpURLConnection)new URL(informationurl).openConnection();
-                threshold.setConnectTimeout(3000);
-                threshold.setDoInput(true);
-                threshold.setDoOutput(true);
-                threshold.setRequestMethod("POST");
-                threshold.setUseCaches(false);
-                threshold.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                threshold.setRequestProperty("Content-Length", String.valueOf(data.length));
-                outputStream = threshold.getOutputStream();
-                outputStream.write(data);
-                InputStream read = threshold.getInputStream();
-                StringBuilder maxmin = new StringBuilder();
-                BufferedReader br = new BufferedReader(new InputStreamReader(read));
-                try {
-                    while ((line = br.readLine()) != null) {
-                            maxmin.append(line);
-                    }
-                } catch (IOException e) {
-                        e.printStackTrace();
-                }
-                value = maxmin.toString();
+                String datapacket = userinformation.toString();
+                send = new ConnectionToCloud(informationurl,datapacket);
+                value = send.sendToCloud();
                 String handle = value.replace("[","");
                 handle = handle.replace("]","");
                 String[] warning = handle.split(",");
                 minPulse = Integer.parseInt(warning[0].trim());
                 maxPulse = Integer.parseInt(warning[1].trim());
                 //update the diagram every 5 seconds
-                data = raceid.toString().getBytes();
+                String id = raceid.toString();
                 while(update){
-                    HttpURLConnection httpURLConnection = (HttpURLConnection)new URL(updateurl).openConnection();
-                    httpURLConnection.setConnectTimeout(3000);
-                    httpURLConnection.setDoInput(true);
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setRequestMethod("POST");
-                    httpURLConnection.setUseCaches(false);
-                    httpURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                    httpURLConnection.setRequestProperty("Content-Length", String.valueOf(data.length));
-                    outputStream = httpURLConnection.getOutputStream();
-                    outputStream.write(data);
-                    InputStream is = httpURLConnection.getInputStream();
-                    StringBuilder total = new StringBuilder();
-                    try{
-                        BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                        try {
-                            while ((line = rd.readLine()) != null) {
-                                total.append(line);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        value = total.toString();
-                        publishProgress(value);
-                        Thread.sleep(5000);
+
+                   try{
+                       send = new ConnectionToCloud(updateurl,id);
+                       value = send.sendToCloud();
+                       publishProgress(value);
+                       Thread.sleep(5000);
+
                     }catch (InterruptedException e){
                         e.printStackTrace();
                     }
                 }
 
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+
             return resultstring ;
         }
 
@@ -262,9 +204,13 @@ public class RunningActivity extends AppCompatActivity {
                             normalOxyegen++;
                         }
                     }
+                    TextView warning = (TextView)findViewById(R.id.warn);
                     if(normalPulse >= 5|| normalOxyegen>=5){
                         Vibrator vib = (Vibrator) getSystemService(Service.VIBRATOR_SERVICE);
                         vib.vibrate(1000);
+                        warning.setText("danger");
+                    }else{
+                        warning.setText("safe");
                     }
                     lineChart = (LineChartView)findViewById(R.id.line_chart);
                     for (int i = 0; i < data.length/2; i++) {

@@ -120,38 +120,10 @@ public class PreviousDataActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params){
-            try {
                 String input = params[0];
-                byte[]data = input.getBytes();
-                //http request
-                HttpURLConnection httpURLConnection = (HttpURLConnection)new URL(url).openConnection();
-                httpURLConnection.setConnectTimeout(3000);
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.setDoOutput(true);
-                httpURLConnection.setRequestMethod("POST");
-                httpURLConnection.setUseCaches(false);
-                httpURLConnection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                httpURLConnection.setRequestProperty("Content-Length", String.valueOf(data.length));
-                OutputStream outputStream = httpURLConnection.getOutputStream();
-                outputStream.write(data);
-                InputStream is = httpURLConnection.getInputStream();
-                String line = "";
-                //get the return from the cloud
-                StringBuilder total = new StringBuilder();
-                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
-                try {
-                    while ((line = rd.readLine()) != null) {
-                        total.append(line);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                resultstring = total.toString();
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return resultstring ;
+                ConnectionToCloud send = new ConnectionToCloud(url,input);
+                resultstring = send.sendToCloud();
+                return resultstring;
         }
 
 

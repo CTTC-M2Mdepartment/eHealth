@@ -24,6 +24,10 @@ public class ChooseFunctionActivity extends AppCompatActivity {
     }
 
     public void onClickLogOut(View v){
+        SharedPreferences mSharedPreferences = getSharedPreferences("userLogin", 0);
+        SharedPreferences.Editor editor = mSharedPreferences.edit();
+        editor.clear();
+        editor.commit();
         Intent intent = new Intent(ChooseFunctionActivity.this,MainActivity.class);
         startActivity(intent);
     }
