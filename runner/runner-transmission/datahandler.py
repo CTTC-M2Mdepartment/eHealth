@@ -12,7 +12,7 @@ try:
     while (i<TIMESLOT):
         if(serialFromArduino.inWaiting()>0):
             input = serialFromArduino.readline()
-            #fliter
+            #filter
             raw_data = input.rstrip("\n")
             data = raw_data.split(" ")
             print data
