@@ -51,7 +51,7 @@ void loop() {
   Serial.print(" ");
   Serial.print(eHealth.getOxygenSaturation());
   Serial.print("\n");
-  delay(1000);
+  delay(2000);
 }
 
 
