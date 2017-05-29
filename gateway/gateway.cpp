@@ -36,7 +36,6 @@ int usePython (char* query) {
 
 int e;
 char my_packet[100];
-string lora_buffer[BUFNUM] = {""};
 int read_flag = 0;
 int write_flag = 0;
 int counting = 0;
@@ -96,7 +95,6 @@ void loop(void)
       my_packet[i] = (char)sx1272.packet_received.data[i];
     }
     printf("Message: %s\n", my_packet);
-    lora_buffer[read_flag] = my_packet;
     char* send;
     send = my_packet;
     usePython(send);
